@@ -9,6 +9,8 @@ from flask import url_for
 from flask import request
 from flask_login import logout_user
 from passwordhelper import PasswordHelper
+from flask_login import current_user
+import config
 
 DB = DBHelper()
 PH = PasswordHelper()
@@ -53,15 +55,38 @@ def register():
     DB.add_user(email,salt,hashed)
     return redirect(url_for('home'))
 
+@app.route("/dashboard")
+@login_required
+def dashboard():
+    return render_template("dashboard.html")
+
 @app.route("/account")
 @login_required
 def account():
-    return "You are logged in"
+    tables = DB.get_tables(current_user.get_id())
+    return render_template("account.html", tables=tables)
 
 @app.route("/logout")
 def logout():
     logout_user()
     return redirect(url_for('home'))
+
+@app.route("/account/createtable", methods=["POST"])
+@login_required
+def account_createtable():
+    tablename = request.form.get("tablenumber")
+    tableid = DB.add_table(tablename, current_user.id())
+    new_url = config.base_url + "newrequest/" + tableid
+    DB.update_table(tableid, new_url)
+    return redirect(url_for('account'))
+
+@app.route("/account/deletable", methods=["POST"])
+@login_required
+def account_deletable():
+    tableid = request.form.get("tableid")
+    DB.delete_table(tableid)
+    return redirect(url_for('account'))
+
 
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
