@@ -30,3 +30,16 @@ class DBHelper:
 
     def delete_table(self, table_id):
         self.db.tables.remove({"_id": ObjectId(table_id)})
+
+    def add_request(self, table_id, time):
+        table = self.get_table(table_id)
+        self.db.requests.insert({"owner": table['owner'],
+        "table_number": table['number'],
+        "table_id": table_id, "time": time})
+
+    def get_requests(self, owner_id):
+        return list(self.db.requests.find({"owner": owner_id}))
+
+    def delete_requests(self, request_id):
+        self.db.requests.remove({"_id": ObjectId(request_id)})
+        
